@@ -1,5 +1,9 @@
 <?php
 
+define('SITEORIGIN_PANELS_LITE_VERSION', '1.0');
+
+include get_template_directory() . '/inc/panels-lite/inc/plugin-activation.php';
+
 /**
  * Add the admin menu entries
  */
@@ -38,25 +42,42 @@ function siteorigin_panels_lite_enqueue_admin($prefix){
 		wp_enqueue_style('siteorigin-panels-lite-teaser', get_template_directory_uri().'/inc/panels-lite/css/panels-admin.css');
 	}
 
-	if( ( $prefix == 'post.php' || $prefix == 'post-new.php' ) && function_exists('siteorigin_plugin_activation_install_url') ) {
-		$install_url = siteorigin_plugin_activation_install_url(
+	if( ( $prefix == 'post.php' || $prefix == 'post-new.php' ) ) {
+		$install_url = siteorigin_panels_lite_plugin_activation_install_url(
 			'siteorigin-panels',
 			__('Page Builder', 'siteorigin')
 		);
 
 		if( current_user_can( 'install_plugins' ) ) {
 			$js_suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
-			wp_enqueue_script( 'siteorigin-panels-lite-teaser', get_template_directory_uri() . '/inc/panels-lite/js/tab' . $js_suffix . '.js', array( 'jquery' ) );
+			wp_enqueue_script( 'siteorigin-panels-lite-teaser', get_template_directory_uri() . '/inc/panels-lite/js/tab' . $js_suffix . '.js', array( 'jquery' ), SITEORIGIN_PANELS_LITE_VERSION );
 			wp_localize_script( 'siteorigin-panels-lite-teaser', 'panelsLiteTeaser', array(
 				'tab'        => __( 'Page Builder', 'siteorigin' ),
+				'buttons'    => array(
+					'install'   => __('Install', 'siteorigin'),
+					'cancel'    => __('Cancel', 'siteorigin'),
+				),
 				'message'    => __( "Refresh this page after you've installed Page Builder.", 'siteorigin' ),
-				'confirm'    => __( "Your theme has Page Builder support. Would you like to install it? It's free." ),
+				'contentUrl' => admin_url('admin-ajax.php?action=panels_lite_install_content'),
 				'installUrl' => $install_url
 			) );
+
+			wp_enqueue_style( 'siteorigin-panels-lite-teaser', get_template_directory_uri() . '/inc/panels-lite/css/post-teaser.css', array(), SITEORIGIN_PANELS_LITE_VERSION );
 		}
 	}
 }
 add_action('admin_enqueue_scripts', 'siteorigin_panels_lite_enqueue_admin');
+
+/**
+ * The admin action for displaying content
+ */
+function siteorigin_panels_lite_install_content(){
+	if( !current_user_can( 'install_plugins' ) ) exit();
+
+	get_template_part('inc/panels-lite/tpl/install');
+	exit();
+}
+add_action('wp_ajax_panels_lite_install_content', 'siteorigin_panels_lite_install_content');
 
 /**
  * Add the Edit Home Page item to the admin bar.
