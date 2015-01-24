@@ -1,9 +1,9 @@
 <?php
-$install_url = siteorigin_plugin_activation_install_url(
+$install_url = siteorigin_panels_lite_plugin_activation_install_url(
 	'siteorigin-panels',
 	__('Page Builder', 'siteorigin')
 );
-$home = get_theme_mod('siteorigin_panels_home_page_enabled', siteorigin_panels_lite_setting('home-page-default'));
+$home = get_theme_mod( 'siteorigin_panels_home_page_enabled', siteorigin_panels_lite_setting('home-page-default') );
 $toggle_url = wp_nonce_url(admin_url('themes.php?page=so_panels_home_page&toggle=1&panels_new='.($home ? 0 : 1)), 'toggle_panels_home');
 
 ?>
@@ -15,7 +15,7 @@ $toggle_url = wp_nonce_url(admin_url('themes.php?page=so_panels_home_page&toggle
 		<a id="panels-toggle-switch" href="<?php echo esc_url($toggle_url) ?>" class="state-<?php echo $home ? 'on' : 'off' ?> subtle-move">
 			<div class="on-text"><?php _e('ON', 'siteorigin') ?></div>
 			<div class="off-text"><?php _e('OFF', 'siteorigin') ?></div>
-			<img src="<?php echo get_template_directory_uri() ?>/extras/panels-lite/css/images/handle.png" class="handle" />
+			<img src="<?php echo get_template_directory_uri() ?>/inc/panels-lite/css/images/handle.png" class="handle" />
 		</a>
 	</h2>
 

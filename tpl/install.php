@@ -4,7 +4,7 @@
 		<img src="<?php echo get_template_directory_uri() ?>/inc/panels-lite/images/icon.png" class="icon" />
 
 		<div class="text">
-			<h2><?php _e('Install SiteOrigin Page Builder', 'siteorigin') ?></h2>
+			<h2><?php _e('SiteOrigin Page Builder', 'siteorigin') ?></h2>
 			<h3><?php _e('The Free Responsive WordPress Page Builder', 'siteorigin') ?></h3>
 			<p>
 				<a href="#install" class="close-on-click">Install Now</a>

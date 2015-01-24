@@ -21,7 +21,7 @@ jQuery(function($){
                 panelsLiteTeaser.contentUrl,
                 function(html){
                     modal.removeClass('panels-loading').find('#siteorigin-panels-install-window').html(html);
-                    modal.find('.button-cancel').click(function(e){
+                    modal.find('.button-cancel, #siteorigin-panels-install-overlay').click(function(e){
                         e.preventDefault();
                         modal.hide();
                         $('body').css('overflow', 'auto');

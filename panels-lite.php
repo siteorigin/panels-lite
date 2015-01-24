@@ -3,6 +3,8 @@
 define('SITEORIGIN_PANELS_LITE_VERSION', '1.0');
 
 include get_template_directory() . '/inc/panels-lite/inc/plugin-activation.php';
+include get_template_directory() . '/inc/panels-lite/inc/css.php';
+include get_template_directory() . '/inc/panels-lite/inc/default-styles.php';
 
 /**
  * Add the admin menu entries
@@ -171,7 +173,7 @@ function siteorigin_panels_lite_is_home(){
  */
 function siteorigin_panels_lite_enqueue_styles(){
 	if( siteorigin_panels_lite_is_home() ){
-		wp_enqueue_style( 'siteorigin-panels', get_template_directory_uri() . '/inc/panels-lite/css/front.css', array(), SITEORIGIN_THEME_VERSION );
+		wp_enqueue_style( 'siteorigin-panels', get_template_directory_uri() . '/inc/panels-lite/css/front.css', array(), SITEORIGIN_PANELS_LITE_VERSION );
 	}
 }
 add_action('wp_enqueue_scripts', 'siteorigin_panels_lite_enqueue_styles');
@@ -203,18 +205,23 @@ add_filter('body_class', 'siteorigin_panels_lite_body_class');
  * @param $is_last
  */
 function siteorigin_panels_lite_the_widget( $widget, $instance, $grid, $cell, $panel, $is_first, $is_last ) {
-	if ( class_exists( $widget ) ) {
-		$the_widget = new $widget;
-	}
+	global $wp_widget_factory;
+
+	// Load the widget from the widget factory and give themes and plugins a chance to provide their own
+	$the_widget = !empty($wp_widget_factory->widgets[$widget]) ? $wp_widget_factory->widgets[$widget] : false;
+	$the_widget = apply_filters( 'siteorigin_panels_widget_object', $the_widget, $widget, $instance );
 
 	if( empty($post_id) ) $post_id = get_the_ID();
 
-	$classes = array( 'panel', 'widget' );
+	$classes = apply_filters( 'siteorigin_panels_widget_classes', array( 'panel', 'widget' ), $widget, $instance);
 	if ( !empty( $the_widget ) && !empty( $the_widget->id_base ) ) $classes[] = 'widget_' . $the_widget->id_base;
 	if ( $is_first ) $classes[] = 'panel-first-child';
 	if ( $is_last ) $classes[] = 'panel-last-child';
 	$id = 'panel-' . $post_id . '-' . $grid . '-' . $cell . '-' . $panel;
 
+	// Filter and sanitize the classes
+	$classes = apply_filters('siteorigin_panels_widget_classes', $classes, $widget, $instance);
+	$classes = array_map('sanitize_html_class', $classes);
 
 	$args = array(
 		'before_widget' => '<div class="' . esc_attr( implode( ' ', $classes ) ) . '" id="' . $id . '">',
@@ -224,77 +231,90 @@ function siteorigin_panels_lite_the_widget( $widget, $instance, $grid, $cell, $p
 		'widget_id' => 'widget-' . $grid . '-' . $cell . '-' . $panel
 	);
 
-	if ( class_exists( $widget ) ) {
+	// If there is a style wrapper, add it.
+	if( !empty($style_wrapper) ) {
+		$args['before_widget'] = $args['before_widget'] . $style_wrapper;
+		$args['after_widget'] = '</div>' . $args['after_widget'];
+	}
+
+	$widget_code = '';
+	if ( !empty($the_widget) && is_a($the_widget, 'WP_Widget')  ) {
+		ob_start();
 		$the_widget->widget($args , $instance );
+		$widget_code = ob_get_clean();
 	}
 	else {
 		// This gives themes a chance to display some sort of placeholder for missing widgets
-		echo apply_filters('siteorigin_panels_missing_widget', '', $widget, $args , $instance);
+		$widget_code = apply_filters('siteorigin_panels_missing_widget', $args['before_widget'] . $args['after_widget'], $widget, $args , $instance);
 	}
+
+	// This is a special filter to create demo content
+	echo apply_filters('siteorigin_panels_lite_widget', $widget_code, $widget, $args , $instance);
 }
 
 /**
  * Echo the CSS for the current panel
  *
- * @action wp_print_styles
+ * @param array $panels_data
  */
-function siteorigin_panels_lite_css() {
-	if( !siteorigin_panels_lite_is_home() ) return;
-
-	$layouts = apply_filters( 'siteorigin_panels_prebuilt_layouts', array() );
-	if(empty($layouts[ siteorigin_panels_lite_setting('home-page-default') ])) return;
-	$panels_data = $layouts[siteorigin_panels_lite_setting('home-page-default')];
-	$panels_data = apply_filters( 'siteorigin_panels_data', $panels_data, 'home' );
-
+function siteorigin_panels_lite_generate_css($post_id, $panels_data) {
 	// Exit if we don't have panels data
-	if ( empty( $panels_data ) ) return;
+	if ( empty( $panels_data ) || empty( $panels_data['grids'] ) ) return;
 
+	// Get some of the default settings
 	$settings = siteorigin_panels_lite_setting();
-
 	$panels_mobile_width = $settings['mobile-width'];
 	$panels_margin_bottom = $settings['margin-bottom'];
 
-	$css = array();
-	$css[1920] = array();
-	$css[ $panels_mobile_width ] = array(); // This is a mobile resolution
+	$css = new SiteOrigin_Panels_Lite_Css_Builder();
 
-	// Add the grid sizing
 	$ci = 0;
 	foreach ( $panels_data['grids'] as $gi => $grid ) {
+
 		$cell_count = intval( $grid['cells'] );
+
+		// Add the cell sizing
 		for ( $i = 0; $i < $cell_count; $i++ ) {
 			$cell = $panels_data['grid_cells'][$ci++];
 
 			if ( $cell_count > 1 ) {
-				$css_new = 'width:' . round( $cell['weight'] * 100, 3 ) . '%';
-				if ( empty( $css[1920][$css_new] ) ) $css[1920][$css_new] = array();
-				$css[1920][$css_new][] = '#pgc-home-' . $gi . '-' . $i;
+				$width = round( $cell['weight'] * 100, 3 ) . '%';
+				$width = apply_filters('siteorigin_panels_css_cell_width', $width, $grid, $gi, $cell, $ci - 1, $panels_data, $post_id);
+
+				// Add the width and ensure we have correct formatting for CSS.
+				$css->add_cell_css($post_id, $gi, $i, '', array(
+					'width' => str_replace(',', '.', $width)
+				));
 			}
 		}
 
 		// Add the bottom margin to any grids that aren't the last
 		if($gi != count($panels_data['grids'])-1){
-			$css[1920]['margin-bottom: '.$panels_margin_bottom.'px'][] = '#pg-home-' . $gi;
+			// Filter the bottom margin for this row with the arguments
+			$css->add_row_css($post_id, $gi, '', array(
+				'margin-bottom' => apply_filters('siteorigin_panels_css_row_margin_bottom', $panels_margin_bottom.'px', $grid, $gi, $panels_data, $post_id)
+			));
 		}
 
 		if ( $cell_count > 1 ) {
-			if ( empty( $css[1920]['float:left'] ) ) $css[1920]['float:left'] = array();
-			$css[1920]['float:left'][] = '#pg-home-' . $gi . ' .panel-grid-cell';
+			$css->add_cell_css($post_id, $gi, false, '', array(
+				// Float right for RTL
+				'float' => !is_rtl() ? 'left' : 'right'
+			));
 		}
 
 		if ( $settings['responsive'] ) {
 			// Mobile Responsive
-			$mobile_css = array( 'float:none', 'width:auto' );
-			foreach ( $mobile_css as $c ) {
-				if ( empty( $css[ $panels_mobile_width ][ $c ] ) ) $css[ $panels_mobile_width ][ $c ] = array();
-				$css[ $panels_mobile_width ][ $c ][] = '#pg-home-' . $gi . ' .panel-grid-cell';
-			}
+			$css->add_cell_css($post_id, $gi, false, '', array(
+				'float' => 'none',
+				'width' => 'auto'
+			), $panels_mobile_width);
 
 			for ( $i = 0; $i < $cell_count; $i++ ) {
 				if ( $i != $cell_count - 1 ) {
-					$css_new = 'margin-bottom:' . $panels_margin_bottom . 'px';
-					if ( empty( $css[$panels_mobile_width][$css_new] ) ) $css[$panels_mobile_width][$css_new] = array();
-					$css[$panels_mobile_width][$css_new][] = '#pgc-home-' . $gi . '-' . $i;
+					$css->add_cell_css($post_id, $gi, $i, '', array(
+						'margin-bottom' => $panels_margin_bottom . 'px',
+					), $panels_mobile_width);
 				}
 			}
 		}
@@ -302,118 +322,280 @@ function siteorigin_panels_lite_css() {
 
 	if( $settings['responsive'] ) {
 		// Add CSS to prevent overflow on mobile resolution.
-		$panel_grid_css = 'margin-left: 0 !important; margin-right: 0 !important;';
-		$panel_grid_cell_css = 'padding: 0 !important;';
-		if(empty($css[ $panels_mobile_width ][ $panel_grid_css ])) $css[ $panels_mobile_width ][ $panel_grid_css ] = array();
-		if(empty($css[ $panels_mobile_width ][ $panel_grid_cell_css ])) $css[ $panels_mobile_width ][ $panel_grid_cell_css ] = array();
-		$css[ $panels_mobile_width ][ $panel_grid_css ][] = '.panel-grid';
-		$css[ $panels_mobile_width ][ $panel_grid_cell_css ][] = '.panel-grid-cell';
+		$css->add_row_css($post_id, false, '', array(
+			'margin-left' => 0,
+			'margin-right' => 0,
+		), $panels_mobile_width);
+
+		$css->add_cell_css($post_id, false, false, '', array(
+			'padding' => 0,
+		), $panels_mobile_width);
 	}
 
-	// Add the bottom margin
-	$bottom_margin = 'margin-bottom: '.$panels_margin_bottom.'px';
-	$bottom_margin_last = 'margin-bottom: 0 !important';
-	if(empty($css[ 1920 ][ $bottom_margin ])) $css[ 1920 ][ $bottom_margin ] = array();
-	if(empty($css[ 1920 ][ $bottom_margin_last ])) $css[ 1920 ][ $bottom_margin_last ] = array();
-	$css[ 1920 ][ $bottom_margin ][] = '.panel-grid-cell .panel';
-	$css[ 1920 ][ $bottom_margin_last ][] = '.panel-grid-cell .panel:last-child';
+	// Add the bottom margins
+	$css->add_cell_css($post_id, false, false, '.panel', array(
+		'margin-bottom' => $panels_margin_bottom.'px'
+	));
+	$css->add_cell_css($post_id, false, false, '.panel:last-child', array(
+		'margin-bottom' => 0
+	));
 
-	// This is for the side margins
-	$magin_half = $settings['margin-sides']/2;
-	$side_margins = "margin: 0 -{$magin_half}px 0 -{$magin_half}px";
-	$side_paddings = "padding: 0 {$magin_half}px 0 {$magin_half}px";
-	if(empty($css[ 1920 ][ $side_margins ])) $css[ 1920 ][ $side_margins ] = array();
-	if(empty($css[ 1920 ][ $side_paddings ])) $css[ 1920 ][ $side_paddings ] = array();
-	$css[ 1920 ][ $side_margins ][] = '.panel-grid';
-	$css[ 1920 ][ $side_paddings ][] = '.panel-grid-cell';
+	// Let other plugins customize various aspects of the rows (grids)
+	foreach ( $panels_data['grids'] as $gi => $grid ) {
+		// Rows with only one cell don't need gutters
+		if($grid['cells'] <= 1) continue;
 
-	/**
-	 * Filter the unprocessed CSS array
-	 */
-	$css = apply_filters( 'siteorigin_panels_css', $css );
+		// Let other themes and plugins change the gutter.
+		$gutter = apply_filters('siteorigin_panels_css_row_gutter', $settings['margin-sides'].'px', $grid, $gi, $panels_data);
 
-	// Build the CSS
-	$css_text = '';
-	krsort( $css );
-	foreach ( $css as $res => $def ) {
-		if ( empty( $def ) ) continue;
+		if( !empty($gutter) ) {
+			// We actually need to find half the gutter.
+			preg_match('/([0-9\.,]+)(.*)/', $gutter, $match);
+			if( !empty( $match[1] ) ) {
+				$margin_half = (floatval($match[1])/2) . $match[2];
+				$css->add_row_css($post_id, $gi, '', array(
+					'margin-left' => '-' . $margin_half,
+					'margin-right' => '-' . $margin_half,
+				) );
+				$css->add_cell_css($post_id, $gi, false, '', array(
+					'padding-left' => $margin_half,
+					'padding-right' => $margin_half,
+				) );
 
-		if ( $res < 1920 ) {
-			$css_text .= '@media (max-width:' . $res . 'px)';
-			$css_text .= ' { ';
+			}
 		}
-
-		foreach ( $def as $property => $selector ) {
-			$selector = array_unique( $selector );
-			$css_text .= implode( ' , ', $selector ) . ' { ' . $property . ' } ';
-		}
-
-		if ( $res < 1920 ) $css_text .= ' } ';
 	}
 
-	echo '<style type="text/css">';
-	echo $css_text;
-	echo '</style>';
+	// Let other plugins and components filter the CSS object.
+	$css = apply_filters('siteorigin_panels_css_object', $css, $panels_data, $post_id);
+	return $css->get_css();
+}
+
+/**
+ *
+ */
+function siteorigin_panels_lite_css(){
+	if( !siteorigin_panels_lite_is_home() ) return;
+
+	$layouts = apply_filters( 'siteorigin_panels_prebuilt_layouts', array() );
+	if(empty($layouts[ siteorigin_panels_lite_setting('home-page-default') ])) return;
+	$panels_data = $layouts[siteorigin_panels_lite_setting('home-page-default')];
+	$panels_data = apply_filters( 'siteorigin_panels_data', $panels_data, 'home' );
+
+	?><style type="text/css"><?php echo siteorigin_panels_lite_generate_css('home', $panels_data) ?></style><?php
 }
 add_action( 'wp_head', 'siteorigin_panels_lite_css', 15 );
 
 /**
- * Renders the home page if we need it.
+ * @param string $post_id
+ * @param bool $enqueue_css
+ * @param bool $panels_data
+ *
+ * @return mixed|void
  */
-function siteorigin_panels_lite_home_render(){
-	$layouts = apply_filters( 'siteorigin_panels_prebuilt_layouts', array() );
-	if( empty( $layouts[ siteorigin_panels_lite_setting('home-page-default') ] ) ) return;
-	$panels_data = $layouts[siteorigin_panels_lite_setting('home-page-default')];
-	$panels_data = apply_filters( 'siteorigin_panels_data', $panels_data, 'home' );
+function siteorigin_panels_lite_home_render( $post_id = 'home', $enqueue_css = false, $panels_data = false ){
+	if( empty($post_id) ) $post_id = get_the_ID();
+
+	global $siteorigin_panels_current_post;
+	$old_current_post = $siteorigin_panels_current_post;
+	$siteorigin_panels_current_post = $post_id;
+
+	// Try get the cached panel from in memory cache.
+	global $siteorigin_panels_cache;
+	if(!empty($siteorigin_panels_cache) && !empty($siteorigin_panels_cache[$post_id]))
+		return $siteorigin_panels_cache[$post_id];
+
+	if( empty($panels_data) ) {
+		if( strpos($post_id, 'prebuilt:') === 0) {
+			list($null, $prebuilt_id) = explode(':', $post_id, 2);
+			$layouts = apply_filters('siteorigin_panels_prebuilt_layouts', array());
+			$panels_data = !empty($layouts[$prebuilt_id]) ? $layouts[$prebuilt_id] : array();
+		}
+		else if($post_id == 'home'){
+			$panels_data = get_post_meta( get_option('siteorigin_panels_home_page_id'), 'panels_data', true );
+
+			if( is_null($panels_data) ){
+				// Load the default layout
+				$layouts = apply_filters('siteorigin_panels_prebuilt_layouts', array());
+				$prebuilt_id = siteorigin_panels_lite_setting('home-page-default') ? siteorigin_panels_lite_setting('home-page-default') : 'home';
+
+				$panels_data = !empty($layouts[$prebuilt_id]) ? $layouts[$prebuilt_id] : current($layouts);
+			}
+		}
+		else{
+			if ( post_password_required($post_id) ) return false;
+			$panels_data = get_post_meta( $post_id, 'panels_data', true );
+		}
+	}
+
+	$panels_data = apply_filters( 'siteorigin_panels_data', $panels_data, $post_id );
+	if( empty( $panels_data ) || empty( $panels_data['grids'] ) ) return '';
 
 	// Create the skeleton of the grids
 	$grids = array();
-	foreach ( $panels_data['grids'] as $gi => $grid ) {
-		$gi = intval( $gi );
-		$grids[$gi] = array();
-		for ( $i = 0; $i < $grid['cells']; $i++ ) {
-			$grids[$gi][$i] = array();
+	if( !empty( $panels_data['grids'] ) && !empty( $panels_data['grids'] ) ) {
+		foreach ( $panels_data['grids'] as $gi => $grid ) {
+			$gi = intval( $gi );
+			$grids[$gi] = array();
+			for ( $i = 0; $i < $grid['cells']; $i++ ) {
+				$grids[$gi][$i] = array();
+			}
 		}
 	}
 
-	foreach ( $panels_data['widgets'] as $widget ) {
-		$grids[intval( $widget['info']['grid'] )][intval( $widget['info']['cell'] )][] = $widget;
+	// We need this to migrate from the old $panels_data that put widget meta into the "info" key instead of "panels_info"
+	if( !empty( $panels_data['widgets'] ) && is_array($panels_data['widgets']) ) {
+		foreach ( $panels_data['widgets'] as $i => $widget ) {
+			if( empty( $panels_data['widgets'][$i]['panels_info'] ) ) {
+				$panels_data['widgets'][$i]['panels_info'] = $panels_data['widgets'][$i]['info'];
+				unset($panels_data['widgets'][$i]['info']);
+			}
+		}
+	}
+
+	if( !empty( $panels_data['widgets'] ) && is_array($panels_data['widgets']) ){
+		foreach ( $panels_data['widgets'] as $widget ) {
+			// Put the widgets in the grids
+			$grids[ intval( $widget['panels_info']['grid']) ][ intval( $widget['panels_info']['cell'] ) ][] = $widget;
+		}
 	}
 
 	ob_start();
+
+	// Add the panel layout wrapper
+	echo '<div id="pl-' . $post_id . '">';
+
+	global $siteorigin_panels_inline_css;
+	if( empty($siteorigin_panels_inline_css) ) $siteorigin_panels_inline_css = '';
+
+	if($enqueue_css) {
+		wp_enqueue_style('siteorigin-panels-front');
+		$siteorigin_panels_inline_css .= siteorigin_panels_lite_generate_css($post_id, $panels_data);
+	}
+
+	echo apply_filters( 'siteorigin_panels_before_content', '', $panels_data, $post_id );
+
 	foreach ( $grids as $gi => $cells ) {
 
-		$grid_classes = array('panel-grid');
-		$grid_classes = apply_filters( 'siteorigin_panels_row_classes', $grid_classes );
-		$grid_classes = array_map('esc_attr', $grid_classes);
+		$grid_classes = apply_filters( 'siteorigin_panels_row_classes', array('panel-grid'), $panels_data['grids'][$gi] );
+		$grid_attributes = apply_filters( 'siteorigin_panels_row_attributes', array(
+			'class' => implode( ' ', $grid_classes ),
+			'id' => 'pg-' . $post_id . '-' . $gi
+		), $panels_data['grids'][$gi] );
 
-		?><div class="<?php echo implode(' ', $grid_classes) ?>" id="pg-<?php echo 'home-' . $gi ?>"><?php
+		// This allows other themes and plugins to add html before the row
+		echo apply_filters( 'siteorigin_panels_before_row', '', $panels_data['grids'][$gi], $grid_attributes );
 
-		if( !empty( $panels_data['grids'][$gi]['style'] ) ) {
-			?><div class="panel-row-style <?php echo esc_attr('panel-row-style-' . $panels_data['grids'][$gi]['style']) ?>"><?php
+		echo '<div ';
+		foreach ( $grid_attributes as $name => $value ) {
+			echo $name.'="'.esc_attr($value).'" ';
 		}
+		echo '>';
+
+		$style_attributes = array();
+		if( !empty( $panels_data['grids'][$gi]['style']['class'] ) ) {
+			$style_attributes['class'] = array('panel-row-style-'.$panels_data['grids'][$gi]['style']['class']);
+		}
+
+		// Themes can add their own attributes to the style wrapper
+		$row_style_wrapper = siteorigin_panels_lite_start_style_wrapper( 'row', $style_attributes, !empty($panels_data['grids'][$gi]['style']) ? $panels_data['grids'][$gi]['style'] : array() );
+		if( !empty($row_style_wrapper) ) echo $row_style_wrapper;
 
 		foreach ( $cells as $ci => $widgets ) {
-			$cell_classes = apply_filters( 'siteorigin_panels_row_cell_classes', array('panel-grid-cell') );
-			$cell_classes = array_map('esc_attr', $cell_classes);
+			// Themes can add their own styles to cells
+			$cell_classes = apply_filters( 'siteorigin_panels_row_cell_classes', array('panel-grid-cell'), $panels_data );
+			$cell_attributes = apply_filters( 'siteorigin_panels_row_cell_attributes', array(
+				'class' => implode( ' ', $cell_classes ),
+				'id' => 'pgc-' . $post_id . '-' . $gi  . '-' . $ci
+			), $panels_data );
 
-			?><div class="<?php echo implode( ' ', $cell_classes ) ?>" id="pgc-<?php echo 'home-' . $gi  . '-' . $ci ?>"><?php
+			echo '<div ';
+			foreach ( $cell_attributes as $name => $value ) {
+				echo $name.'="'.esc_attr($value).'" ';
+			}
+			echo '>';
+
+			$cell_style_wrapper = siteorigin_panels_lite_start_style_wrapper( 'cell', array(), !empty($panels_data['grids'][$gi]['style']) ? $panels_data['grids'][$gi]['style'] : array() );
+			if( !empty($cell_style_wrapper) ) echo $cell_style_wrapper;
+
 			foreach ( $widgets as $pi => $widget_info ) {
-				$data = $widget_info;
-				unset( $data['info'] );
+				$instance = $widget_info;
+				unset( $instance['panels_info'] );
 
-				siteorigin_panels_lite_the_widget( $widget_info['info']['class'], $data, $gi, $ci, $pi, $pi == 0, $pi == count( $widgets ) - 1 );
+				// TODO this wrapper should go in the before/after widget arguments
+				$widget_style_wrapper = siteorigin_panels_lite_start_style_wrapper( 'widget', array(), !empty( $widget_info['panels_info']['style'] ) ? $widget_info['panels_info']['style'] : array() );
+				siteorigin_panels_lite_the_widget( $widget_info['panels_info']['class'], $instance, $gi, $ci, $pi, $pi == 0, $pi == count( $widgets ) - 1, $post_id, $widget_style_wrapper );
 			}
 			if ( empty( $widgets ) ) echo '&nbsp;';
-			?></div><?php
-		}
-		?></div><?php
 
-		if( !empty( $panels_data['grids'][$gi]['style'] ) ) {
-			?></div><?php
+			if( !empty($cell_style_wrapper) ) echo '</div>';
+			echo '</div>';
 		}
+
+		echo '</div>';
+
+		// Close the
+		if( !empty($row_style_wrapper) ) echo '</div>';
+
+		// This allows other themes and plugins to add html after the row
+		echo apply_filters( 'siteorigin_panels_after_row', '', $panels_data['grids'][$gi], $grid_attributes );
 	}
+
+	echo apply_filters( 'siteorigin_panels_after_content', '', $panels_data, $post_id );
+
+	echo '</div>';
+
 	$html = ob_get_clean();
 
-	return apply_filters( 'siteorigin_panels_render', $html, 'home', null );
+	// Reset the current post
+	$siteorigin_panels_current_post = $old_current_post;
+
+	return apply_filters( 'siteorigin_panels_render', $html, $post_id, !empty($post) ? $post : null );
+}
+
+/**
+ * Echo the style wrapper and return if there was a wrapper
+ *
+ * @param $name
+ * @param $style_attributes
+ * @param array $style_args
+ *
+ * @return bool Is there a style wrapper
+ */
+function siteorigin_panels_lite_start_style_wrapper($name, $style_attributes, $style_args = array()){
+
+	$style_wrapper = '';
+
+	if( empty($style_attributes['class']) ) $style_attributes['class'] = array();
+	if( empty($style_attributes['style']) ) $style_attributes['style'] = '';
+
+	$style_attributes = apply_filters('siteorigin_panels_' . $name . '_style_attributes', $style_attributes, $style_args );
+
+	if( empty($style_attributes['class']) ) unset($style_attributes['class']);
+	if( empty($style_attributes['style']) ) unset($style_attributes['style']);
+
+	if( !empty($style_attributes) ) {
+		if(empty($style_attributes['class'])) $style_attributes['class'] = array();
+		$style_attributes['class'][] = 'panel-' . $name . '-style';
+		$style_attributes['class'] = array_unique( $style_attributes['class'] );
+
+		// Filter and sanitize the classes
+		$style_attributes['class'] = apply_filters('siteorigin_panels_' . $name . '_style_classes', $style_attributes['class'], $style_attributes, $style_args);
+		$style_attributes['class'] = array_map('sanitize_html_class', $style_attributes['class']);
+
+		$style_wrapper = '<div ';
+		foreach ( $style_attributes as $name => $value ) {
+			if( is_array($value) ) {
+				$style_wrapper .= $name.'="'.esc_attr( implode( " ", array_unique( $value ) ) ).'" ';
+			}
+			else {
+				$style_wrapper .= $name.'="'.esc_attr($value).'" ';
+			}
+		}
+		$style_wrapper .= '>';
+
+		return $style_wrapper;
+	}
+
+	return $style_wrapper;
 }
