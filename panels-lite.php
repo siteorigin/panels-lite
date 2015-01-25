@@ -481,6 +481,31 @@ function siteorigin_panels_lite_home_render( $post_id = 'home', $enqueue_css = f
 
 	ob_start();
 
+	if( current_user_can('edit_theme_options') ) {
+		$install_url = siteorigin_panels_lite_plugin_activation_install_url(
+			'siteorigin-panels',
+			__('Page Builder', 'siteorigin')
+		);
+
+		$home = get_theme_mod( 'siteorigin_panels_home_page_enabled', siteorigin_panels_lite_setting('home-page-default') );
+		$toggle_url = add_query_arg('redirect', add_query_arg(false, false), wp_nonce_url(admin_url('admin-ajax.php?action=panels_lite_toggle&panels_new='.($home ? 0 : 1)), 'toggle_panels_home') );
+
+		?>
+		<p class="siteorigin-panels-lite-message">
+			<?php if( current_user_can( 'install_plugins' ) ) : ?>
+				<?php
+				printf(
+					__('<a href="%s">Install Page Builder</a> to <a href="%s">edit</a> this default home page.', 'siteorigin'),
+					$install_url,
+					admin_url('themes.php?page=so_panels_home_page')
+				); ?>
+			<?php endif; ?>
+
+			<?php printf( __("<a href='%s'>Disable this page</a> if you'd prefer to have a standard blog home.", 'siteorigin'), $toggle_url ) ?>
+		</p>
+		<?php
+	}
+
 	// Add the panel layout wrapper
 	echo '<div id="pl-' . $post_id . '">';
 
