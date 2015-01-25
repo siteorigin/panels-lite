@@ -117,6 +117,11 @@ function siteorigin_panels_lite_plugin_activation_install_url(){
 	);
 }
 
+/**
+ * If we're trying to install Page Builder, and it already exists, then activate it instead.
+ *
+ * @return bool
+ */
 function siteorigin_panels_lite_check_installing(){
 	// This is to prevent the issue where this URL is called from outside the admin
 	if( !is_admin() || !function_exists('get_plugins') ) return false;
