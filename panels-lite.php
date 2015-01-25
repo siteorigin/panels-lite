@@ -35,6 +35,25 @@ function siteorigin_panels_lite_render_admin_home_page(){
 }
 
 /**
+ * Handle the action for toggling the value of the home page theme mod
+ */
+function siteorigin_panels_lite_handle_toggle(){
+	if( !current_user_can('edit_theme_options') ) exit();
+	if( empty($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'toggle_panels_home') ) exit();
+	set_theme_mod('siteorigin_panels_home_page_enabled', (bool) $_GET['panels_new']);
+
+	if( !empty($_GET['redirect']) ) {
+		wp_redirect( $_GET['redirect'] );
+	}
+	else {
+		wp_redirect( admin_url('themes.php?page=so_panels_home_page') );
+	}
+
+	exit();
+}
+add_action('wp_ajax_panels_lite_toggle', 'siteorigin_panels_lite_handle_toggle');
+
+/**
  * Enqueue any required admin scripts.
  *
  * @param $prefix
