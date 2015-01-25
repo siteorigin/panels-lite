@@ -65,10 +65,7 @@ function siteorigin_panels_lite_enqueue_admin($prefix){
 	}
 
 	if( ( $prefix == 'post.php' || $prefix == 'post-new.php' ) ) {
-		$install_url = siteorigin_panels_lite_plugin_activation_install_url(
-			'siteorigin-panels',
-			__('Page Builder', 'siteorigin')
-		);
+		$install_url = siteorigin_panels_lite_plugin_activation_install_url();
 
 		if( current_user_can( 'install_plugins' ) ) {
 			$js_suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
@@ -464,10 +461,7 @@ function siteorigin_panels_lite_home_render( $post_id = 'home', $enqueue_css = f
 	ob_start();
 
 	if( current_user_can('edit_theme_options') ) {
-		$install_url = siteorigin_panels_lite_plugin_activation_install_url(
-			'siteorigin-panels',
-			__('Page Builder', 'siteorigin')
-		);
+		$install_url = siteorigin_panels_lite_plugin_activation_install_url();
 
 		$home = get_theme_mod( 'siteorigin_panels_home_page_enabled', siteorigin_panels_lite_setting('home-page-default') );
 		$toggle_url = add_query_arg('redirect', add_query_arg(false, false), wp_nonce_url(admin_url('admin-ajax.php?action=panels_lite_toggle&panels_new='.($home ? 0 : 1)), 'toggle_panels_home') );

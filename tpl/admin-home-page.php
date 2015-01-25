@@ -1,8 +1,5 @@
 <?php
-$install_url = siteorigin_panels_lite_plugin_activation_install_url(
-	'siteorigin-panels',
-	__('Page Builder', 'siteorigin')
-);
+$install_url = siteorigin_panels_lite_plugin_activation_install_url();
 $home = get_theme_mod( 'siteorigin_panels_home_page_enabled', siteorigin_panels_lite_setting('home-page-default') );
 $toggle_url = wp_nonce_url(admin_url('admin-ajax.php?action=panels_lite_toggle&panels_new='.($home ? 0 : 1)), 'toggle_panels_home');
 

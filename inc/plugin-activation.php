@@ -98,16 +98,31 @@ function siteorigin_panels_lite_plugin_activation_do_plugin_install(){
 /**
  * Get the admin install URL
  *
- * @param $plugin
- * @param $plugin_name
- * @param bool $source
- *
  * @return bool|string
  */
-function siteorigin_panels_lite_plugin_activation_install_url($plugin, $plugin_name, $source = false){
+function siteorigin_panels_lite_plugin_activation_install_url(){
+
+	return wp_nonce_url(
+		add_query_arg(
+			array(
+				'page'          => 'siteorigin_panels_lite_plugin_activation',
+				'plugin'        => 'siteorigin-panels',
+				'plugin_name'   => __('Page Builder', 'siteorigin'),
+				'plugin_source' => !empty($source) ? urlencode($source) : false,
+				'siteorigin-pa-install' => 'install-plugin',
+			),
+			admin_url( 'themes.php' )
+		),
+		'siteorigin-pa-install'
+	);
+}
+
+function siteorigin_panels_lite_check_installing(){
 	// This is to prevent the issue where this URL is called from outside the admin
 	if( !is_admin() || !function_exists('get_plugins') ) return false;
+	if( empty($_GET['page']) || $_GET['page'] != 'siteorigin_panels_lite_plugin_activation') return false;
 
+	$plugin = 'siteorigin-panels';
 	$plugins = get_plugins();
 	$plugins = array_keys($plugins);
 
@@ -120,24 +135,10 @@ function siteorigin_panels_lite_plugin_activation_install_url($plugin, $plugin_n
 	}
 
 	if($installed && !is_plugin_active($plugin)){
-		return wp_nonce_url( self_admin_url('plugins.php?action=activate&plugin='.$plugin_path), 'activate-plugin_'.$plugin_path);
-	}
-	elseif($installed && is_plugin_active($plugin)){
-		return '#';
-	}
-	else{
-		return wp_nonce_url(
-			add_query_arg(
-				array(
-					'page'          => 'siteorigin_panels_lite_plugin_activation',
-					'plugin'        => $plugin,
-					'plugin_name'   => $plugin_name,
-					'plugin_source' => !empty($source) ? urlencode($source) : false,
-					'siteorigin-pa-install' => 'install-plugin',
-				),
-				admin_url( 'themes.php' )
-			),
-			'siteorigin-pa-install'
-		);
+		$redirect = wp_nonce_url( self_admin_url('plugins.php?action=activate&plugin='.$plugin_path), 'activate-plugin_'.$plugin_path);
+		$redirect = str_replace('&amp;', '&', $redirect);
+		wp_redirect( $redirect );
+		exit();
 	}
 }
+add_action('admin_init', 'siteorigin_panels_lite_check_installing');
