@@ -5,6 +5,7 @@ define('SITEORIGIN_PANELS_LITE_VERSION', '1.0');
 include get_template_directory() . '/inc/panels-lite/inc/plugin-activation.php';
 include get_template_directory() . '/inc/panels-lite/inc/css.php';
 include get_template_directory() . '/inc/panels-lite/inc/default-styles.php';
+include get_template_directory() . '/inc/panels-lite/inc/widgets.php';
 
 /**
  * Add the admin menu entries
