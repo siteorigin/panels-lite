@@ -102,25 +102,6 @@ function siteorigin_panels_lite_install_content(){
 add_action('wp_ajax_panels_lite_install_content', 'siteorigin_panels_lite_install_content');
 
 /**
- * Add the Edit Home Page item to the admin bar.
- *
- * @param WP_Admin_Bar $admin_bar
- * @return WP_Admin_Bar
- */
-function siteorigin_panels_lite_admin_bar_menu($admin_bar){
-	if( is_front_page() && current_user_can('edit_theme_options') && !is_page() ){
-		$admin_bar->add_node(array(
-			'id' => 'edit-home-page',
-			'title' => __('Edit Home Page', 'siteorigin'),
-			'href' => admin_url('themes.php?page=so_panels_home_page')
-		));
-	}
-
-	return $admin_bar;
-}
-add_action('admin_bar_menu', 'siteorigin_panels_lite_admin_bar_menu', 100);
-
-/**
  * Get a setting value
  *
  * @param bool $key
