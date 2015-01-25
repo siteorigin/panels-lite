@@ -246,7 +246,7 @@ function siteorigin_panels_lite_the_widget( $widget, $instance, $grid, $cell, $p
 	}
 	else {
 		// This gives themes a chance to display some sort of placeholder for missing widgets
-		$widget_code = apply_filters('siteoinin_panels_missing_widget', $args['before_widget'] . $args['after_widget'], $widget, $args , $instance);
+		$widget_code = apply_filters('siteorigin_panels_missing_widget', $args['before_widget'] . $args['after_widget'], $widget, $args , $instance);
 	}
 
 	// This is a special filter to create demo content
