@@ -174,9 +174,10 @@ function siteorigin_panels_lite_enqueue_styles(){
 		wp_enqueue_style( 'siteorigin-panels-lite-front', get_template_directory_uri() . '/inc/panels-lite/css/front.css', array(), SITEORIGIN_PANELS_LITE_VERSION );
 
 		// Render this here so we can enqueue all the scripts we need early.
-		ob_start();
-		siteorigin_panels_lite_home_render();
-		ob_clean();
+		global $siteorigin_panels_cache;
+		if( empty($siteorigin_panels_cache[ get_the_ID() ] ) ) {
+			$siteorigin_panels_cache[ 'home' ] = siteorigin_panels_lite_home_render( );
+		}
 	}
 }
 add_action('wp_enqueue_scripts', 'siteorigin_panels_lite_enqueue_styles');
