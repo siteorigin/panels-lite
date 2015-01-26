@@ -393,12 +393,10 @@ add_action( 'wp_head', 'siteorigin_panels_lite_css', 15 );
 
 /**
  * @param string $post_id
- * @param bool $enqueue_css
- * @param bool $panels_data
  *
  * @return mixed|void
  */
-function siteorigin_panels_lite_home_render( $post_id = 'home', $enqueue_css = false, $panels_data = false ){
+function siteorigin_panels_lite_home_render( $post_id = 'home' ){
 	if( empty($post_id) ) $post_id = get_the_ID();
 
 	global $siteorigin_panels_current_post;
@@ -410,12 +408,10 @@ function siteorigin_panels_lite_home_render( $post_id = 'home', $enqueue_css = f
 	if(!empty($siteorigin_panels_cache) && !empty($siteorigin_panels_cache[$post_id]))
 		return $siteorigin_panels_cache[$post_id];
 
-	if( empty($panels_data) ) {
-		// Load the default layout
-		$layouts = apply_filters('siteorigin_panels_prebuilt_layouts', array());
-		$prebuilt_id = siteorigin_panels_lite_setting('home-page-default') ? siteorigin_panels_lite_setting('home-page-default') : 'home';
-		$panels_data = !empty($layouts[$prebuilt_id]) ? $layouts[$prebuilt_id] : current($layouts);
-	}
+	// Load the default layout
+	$layouts = apply_filters('siteorigin_panels_prebuilt_layouts', array());
+	$prebuilt_id = siteorigin_panels_lite_setting('home-page-default') ? siteorigin_panels_lite_setting('home-page-default') : 'home';
+	$panels_data = !empty($layouts[$prebuilt_id]) ? $layouts[$prebuilt_id] : current($layouts);
 
 	$panels_data = apply_filters( 'siteorigin_panels_data', $panels_data, $post_id );
 	if( empty( $panels_data ) || empty( $panels_data['grids'] ) ) return '';
