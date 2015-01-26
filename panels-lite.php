@@ -172,6 +172,11 @@ function siteorigin_panels_lite_is_home(){
 function siteorigin_panels_lite_enqueue_styles(){
 	if( siteorigin_panels_lite_is_home() ){
 		wp_enqueue_style( 'siteorigin-panels-lite-front', get_template_directory_uri() . '/inc/panels-lite/css/front.css', array(), SITEORIGIN_PANELS_LITE_VERSION );
+
+		// Render this here so we can enqueue all the scripts we need early.
+		ob_start();
+		siteorigin_panels_lite_home_render();
+		ob_clean();
 	}
 }
 add_action('wp_enqueue_scripts', 'siteorigin_panels_lite_enqueue_styles');
