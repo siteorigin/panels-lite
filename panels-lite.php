@@ -171,7 +171,7 @@ function siteorigin_panels_lite_is_home(){
  */
 function siteorigin_panels_lite_enqueue_styles(){
 	if( siteorigin_panels_lite_is_home() ){
-		wp_enqueue_style( 'siteorigin-panels', get_template_directory_uri() . '/inc/panels-lite/css/front.css', array(), SITEORIGIN_PANELS_LITE_VERSION );
+		wp_enqueue_style( 'siteorigin-panels-lite-front', get_template_directory_uri() . '/inc/panels-lite/css/front.css', array(), SITEORIGIN_PANELS_LITE_VERSION );
 	}
 }
 add_action('wp_enqueue_scripts', 'siteorigin_panels_lite_enqueue_styles');
@@ -384,6 +384,7 @@ function siteorigin_panels_lite_css(){
 }
 add_action( 'wp_head', 'siteorigin_panels_lite_css', 15 );
 
+
 /**
  * @param string $post_id
  * @param bool $enqueue_css
@@ -471,11 +472,6 @@ function siteorigin_panels_lite_home_render( $post_id = 'home', $enqueue_css = f
 
 	global $siteorigin_panels_inline_css;
 	if( empty($siteorigin_panels_inline_css) ) $siteorigin_panels_inline_css = '';
-
-	if($enqueue_css) {
-		wp_enqueue_style('siteorigin-panels-front');
-		$siteorigin_panels_inline_css .= siteorigin_panels_lite_generate_css($post_id, $panels_data);
-	}
 
 	echo apply_filters( 'siteorigin_panels_before_content', '', $panels_data, $post_id );
 
