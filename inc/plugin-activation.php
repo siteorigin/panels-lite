@@ -50,9 +50,9 @@ function siteorigin_panels_lite_plugin_activation_do_plugin_install(){
 			add_query_arg(
 				array(
 					'page'          => 'siteorigin_panels_lite_plugin_activation',
-					'plugin'        => $plugin['slug'],
-					'plugin_name'   => $plugin['name'],
-					'plugin_source' => $plugin['source'],
+					'plugin'        => urlencode( $plugin['slug'] ),
+					'plugin_name'   => urlencode( $plugin['name'] ),
+					'plugin_source' => urlencode( $plugin['source'] ),
 					'siteorigin-pa-install' => 'install-plugin',
 				),
 				admin_url( 'themes.php' )
