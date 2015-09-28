@@ -7,8 +7,8 @@ function siteorigin_panels_lite_plugin_activation_page(){
 	if( !isset( $_GET[  'siteorigin-pa-install' ] ) ) return;
 
 	add_theme_page(
-		__('Install Page Builder Plugin', 'siteorigin'),
-		__('Install Page Builder Plugin', 'siteorigin'),
+		siteorigin_panels_lite_localization( 'install_plugin' ),
+		siteorigin_panels_lite_localization( 'install_plugin' ),
 		'install_plugins',
 		'siteorigin_panels_lite_plugin_activation',
 		'siteorigin_panels_lite_plugin_activation_render_page'
@@ -74,7 +74,7 @@ function siteorigin_panels_lite_plugin_activation_do_plugin_install(){
 		require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php'; // Need for upgrade classes
 
 		/** Prep variables for Plugin_Installer_Skin class */
-		$title = sprintf( __('Installing %s', 'siteorigin'), $plugin['name'] );
+		$title = sprintf( siteorigin_panels_lite_localization('installing_plugin'), $plugin['name'] );
 		$url   = add_query_arg( array( 'action' => 'install-plugin', 'plugin' => $plugin['slug'] ), 'update.php' );
 		if ( isset( $_GET['from'] ) )
 			$url .= add_query_arg( 'from', urlencode( stripslashes( $_GET['from'] ) ), $url );
@@ -107,7 +107,7 @@ function siteorigin_panels_lite_plugin_activation_install_url(){
 			array(
 				'page'          => 'siteorigin_panels_lite_plugin_activation',
 				'plugin'        => 'siteorigin-panels',
-				'plugin_name'   => __('Page Builder', 'siteorigin'),
+				'plugin_name'   => siteorigin_panels_lite_localization( 'page_builder' ),
 				'plugin_source' => !empty($source) ? urlencode($source) : false,
 				'siteorigin-pa-install' => 'install-plugin',
 			),
