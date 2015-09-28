@@ -2,7 +2,6 @@
 
 define('SITEORIGIN_PANELS_LITE_VERSION', '1.0');
 
-include get_template_directory() . '/inc/panels-lite/inc/plugin-activation.php';
 include get_template_directory() . '/inc/panels-lite/inc/css.php';
 include get_template_directory() . '/inc/panels-lite/inc/default-styles.php';
 include get_template_directory() . '/inc/panels-lite/inc/widgets.php';
@@ -19,13 +18,11 @@ function siteorigin_panels_lite_localization( $key = false ){
 	if( empty($loc) ) {
 		$loc = apply_filters( 'siteorigin_panels_lite_localization', array(
 			'page_builder' => '',           // __( 'Page Builder', 'siteorigin' ),
-			'home_page_title' => '',        // __('Custom Home Page Builder', 'siteorigin')
-			'home_page_menu' => '',         // __('Home Page', 'siteorigin')
-			'install_plugin' => '',         // __('Install Page Builder Plugin', 'siteorigin')
-			'on_text' => '',                // __('On', 'siteorigin')
-			'off_text' => '',               // __('Off', 'siteorigin')
-
-			'installing_plugin' => '',      // __('Installing %s', 'siteorigin')
+			'home_page_title' => '',        // __( 'Custom Home Page Builder', 'siteorigin' )
+			'home_page_menu' => '',         // __( 'Home Page', 'siteorigin' )
+			'install_plugin' => '',         // __( 'Install Page Builder Plugin', 'siteorigin' )
+			'on_text' => '',                // __( 'On', 'siteorigin' )
+			'off_text' => '',               // __( 'Off', 'siteorigin' )
 
 			'home_install_message' => '',   // Longer message to display to a user about installing the plugin
 			'home_disable_message' => '',   // Message about disabling the custom home page if the user doesn't want to use it
@@ -94,6 +91,8 @@ add_action('wp_ajax_panels_lite_toggle', 'siteorigin_panels_lite_handle_toggle')
  */
 function siteorigin_panels_lite_enqueue_admin($prefix){
 	if($prefix == 'appearance_page_so_panels_home_page'){
+		add_thickbox();
+		wp_enqueue_script('plugin-install');
 		wp_enqueue_style('siteorigin-panels-lite-teaser', get_template_directory_uri().'/inc/panels-lite/css/panels-admin.css');
 	}
 
