@@ -98,12 +98,10 @@ function siteorigin_panels_lite_enqueue_admin($prefix){
 
 	if( ( $prefix == 'post.php' || $prefix == 'post-new.php' ) ) {
 		if( current_user_can( 'install_plugins' ) ) {
-			$js_suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
-
 			add_thickbox();
 			wp_enqueue_script('plugin-install');
 
-			wp_enqueue_script( 'siteorigin-panels-lite-teaser', get_template_directory_uri() . '/inc/panels-lite/js/tab' . $js_suffix . '.js', array( 'jquery' ), SITEORIGIN_PANELS_LITE_VERSION );
+			wp_enqueue_script( 'siteorigin-panels-lite-teaser', get_template_directory_uri() . '/inc/panels-lite/js/tab' . SITEORIGIN_THEME_JS_PREFIX . '.js', array( 'jquery' ), SITEORIGIN_PANELS_LITE_VERSION );
 			wp_localize_script( 'siteorigin-panels-lite-teaser', 'panelsLiteTeaser', array(
 				'tab'        => siteorigin_panels_lite_localization( 'page_builder' ),
 				'installUrl' => self_admin_url( 'plugin-install.php?tab=plugin-information&amp;plugin=siteorigin-panels&amp;TB_iframe=true&amp;width=600&amp;height=550' ),
