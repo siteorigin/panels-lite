@@ -218,6 +218,7 @@ function siteorigin_panels_lite_body_class($classes){
 	if( siteorigin_panels_lite_is_home() ) {
 		$classes[] = 'siteorigin-panels';
 		$classes[] = 'siteorigin-panels-home';
+		$classes[] = 'siteorigin-panels-lite-home';
 	}
 	return $classes;
 }
