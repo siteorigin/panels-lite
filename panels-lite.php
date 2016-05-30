@@ -17,14 +17,15 @@ function siteorigin_panels_lite_localization( $key = false ){
 	static $loc = false;
 	if( empty($loc) ) {
 		$loc = apply_filters( 'siteorigin_panels_lite_localization', array(
-			'page_builder' => '',           // __( 'Page Builder', 'siteorigin' ),
-			'home_page_title' => '',        // __( 'Custom Home Page Builder', 'siteorigin' )
-			'home_page_menu' => '',         // __( 'Home Page', 'siteorigin' )
-			'install_plugin' => '',         // __( 'Install Page Builder Plugin', 'siteorigin' )
-			'on_text' => '',                // __( 'On', 'siteorigin' )
-			'off_text' => '',               // __( 'Off', 'siteorigin' )
+			'page_builder' => __( 'Page Builder', 'siteorigin' ),
+			'home_page_title' => __( 'Custom Home Page Builder', 'siteorigin' ),
+			'home_page_menu' => __( 'Home Page', 'siteorigin' ),
+			'install_plugin' => __( 'Install Page Builder Plugin', 'siteorigin' ),
+			'on_text' => __( 'On', 'siteorigin' ),
+			'off_text' => __( 'Off', 'siteorigin' ),
 
-			'home_install_message' => '',   // Longer message to display to a user about installing the plugin
+			// Longer message to display to a user about installing the plugin
+			'home_install_message' => __( 'This theme supports Page Builder to create beautifully proportioned column based content.', 'siteorigin-north' ),
 			'home_disable_message' => '',   // Message about disabling the custom home page if the user doesn't want to use it
 		) );
 	}
