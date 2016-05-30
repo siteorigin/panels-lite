@@ -2,18 +2,48 @@
 
 define('SITEORIGIN_PANELS_LITE_VERSION', '1.0');
 
-include get_template_directory() . '/inc/panels-lite/inc/plugin-activation.php';
 include get_template_directory() . '/inc/panels-lite/inc/css.php';
 include get_template_directory() . '/inc/panels-lite/inc/default-styles.php';
 include get_template_directory() . '/inc/panels-lite/inc/widgets.php';
+
+/**
+ * Get a localization string
+ *
+ * @param bool|false $key
+ *
+ * @return mixed|void
+ */
+function siteorigin_panels_lite_localization( $key = false ){
+	static $loc = false;
+	if( empty($loc) ) {
+		$loc = apply_filters( 'siteorigin_panels_lite_localization', array(
+			'page_builder' => '',           // __( 'Page Builder', 'siteorigin' ),
+			'home_page_title' => '',        // __( 'Custom Home Page Builder', 'siteorigin' )
+			'home_page_menu' => '',         // __( 'Home Page', 'siteorigin' )
+			'install_plugin' => '',         // __( 'Install Page Builder Plugin', 'siteorigin' )
+			'on_text' => '',                // __( 'On', 'siteorigin' )
+			'off_text' => '',               // __( 'Off', 'siteorigin' )
+
+			'home_install_message' => '',   // Longer message to display to a user about installing the plugin
+			'home_disable_message' => '',   // Message about disabling the custom home page if the user doesn't want to use it
+		) );
+	}
+
+	if( empty($key) ) return $loc;
+	else {
+		return $loc[$key];
+	}
+
+	return $loc;
+}
 
 /**
  * Add the admin menu entries
  */
 function siteorigin_panels_lite_admin_menu(){
 	add_theme_page(
-		__('Custom Home Page Builder', 'siteorigin'),
-		__('Home Page', 'siteorigin'),
+		siteorigin_panels_lite_localization( 'home_page_title' ),
+		siteorigin_panels_lite_localization( 'home_page_menu' ),
 		'edit_theme_options',
 		'so_panels_home_page',
 		'siteorigin_panels_lite_render_admin_home_page'
@@ -25,7 +55,7 @@ add_action('admin_menu', 'siteorigin_panels_lite_admin_menu');
  * Render the page used to build the custom home page.
  */
 function siteorigin_panels_lite_render_admin_home_page(){
-	add_meta_box( 'so-panels-panels', __( 'Page Builder', 'siteorigin' ), 'siteorigin_panels_metabox_render', 'appearance_page_so_panels_home_page', 'advanced', 'high' );
+	add_meta_box( 'so-panels-panels', siteorigin_panels_lite_localization( 'page_builder' ), 'siteorigin_panels_metabox_render', 'appearance_page_so_panels_home_page', 'advanced', 'high' );
 
 	if(isset($_GET['_wpnonce']) && isset($_GET['toggle']) && wp_verify_nonce($_GET['_wpnonce'], 'toggle_panels_home')){
 		// Update home page enabled setting
@@ -61,24 +91,20 @@ add_action('wp_ajax_panels_lite_toggle', 'siteorigin_panels_lite_handle_toggle')
  */
 function siteorigin_panels_lite_enqueue_admin($prefix){
 	if($prefix == 'appearance_page_so_panels_home_page'){
+		add_thickbox();
+		wp_enqueue_script('plugin-install');
 		wp_enqueue_style('siteorigin-panels-lite-teaser', get_template_directory_uri().'/inc/panels-lite/css/panels-admin.css');
 	}
 
 	if( ( $prefix == 'post.php' || $prefix == 'post-new.php' ) ) {
-		$install_url = siteorigin_panels_lite_plugin_activation_install_url();
-
 		if( current_user_can( 'install_plugins' ) ) {
-			$js_suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
-			wp_enqueue_script( 'siteorigin-panels-lite-teaser', get_template_directory_uri() . '/inc/panels-lite/js/tab' . $js_suffix . '.js', array( 'jquery' ), SITEORIGIN_PANELS_LITE_VERSION );
+			add_thickbox();
+			wp_enqueue_script('plugin-install');
+
+			wp_enqueue_script( 'siteorigin-panels-lite-teaser', get_template_directory_uri() . '/inc/panels-lite/js/tab' . SITEORIGIN_THEME_JS_PREFIX . '.js', array( 'jquery' ), SITEORIGIN_PANELS_LITE_VERSION );
 			wp_localize_script( 'siteorigin-panels-lite-teaser', 'panelsLiteTeaser', array(
-				'tab'        => __( 'Page Builder', 'siteorigin' ),
-				'buttons'    => array(
-					'install'   => __('Install', 'siteorigin'),
-					'cancel'    => __('Cancel', 'siteorigin'),
-				),
-				'message'    => __( "Refresh this page after you've installed Page Builder.", 'siteorigin' ),
-				'contentUrl' => admin_url('admin-ajax.php?action=panels_lite_install_content'),
-				'installUrl' => $install_url
+				'tab'        => siteorigin_panels_lite_localization( 'page_builder' ),
+				'installUrl' => self_admin_url( 'plugin-install.php?tab=plugin-information&amp;plugin=siteorigin-panels&amp;TB_iframe=true&amp;width=600&amp;height=550' ),
 			) );
 
 			wp_enqueue_style( 'siteorigin-panels-lite-teaser', get_template_directory_uri() . '/inc/panels-lite/css/post-teaser.css', array(), SITEORIGIN_PANELS_LITE_VERSION );
@@ -192,6 +218,7 @@ function siteorigin_panels_lite_body_class($classes){
 	if( siteorigin_panels_lite_is_home() ) {
 		$classes[] = 'siteorigin-panels';
 		$classes[] = 'siteorigin-panels-home';
+		$classes[] = 'siteorigin-panels-lite-home';
 	}
 	return $classes;
 }
@@ -446,28 +473,6 @@ function siteorigin_panels_lite_home_render( $post_id = 'home' ){
 	}
 
 	ob_start();
-
-	if( current_user_can('edit_theme_options') ) {
-		$install_url = siteorigin_panels_lite_plugin_activation_install_url();
-
-		$home = get_theme_mod( 'siteorigin_panels_home_page_enabled', siteorigin_panels_lite_setting('home-page-default') );
-		$toggle_url = add_query_arg('redirect', add_query_arg(false, false), wp_nonce_url(admin_url('admin-ajax.php?action=panels_lite_toggle&panels_new='.($home ? 0 : 1)), 'toggle_panels_home') );
-
-		?>
-		<p class="siteorigin-panels-lite-message">
-			<?php if( current_user_can( 'install_plugins' ) ) : ?>
-				<?php
-				printf(
-					__('<a href="%s">Install Page Builder</a> to <a href="%s">edit</a> this default home page.', 'siteorigin'),
-					$install_url,
-					admin_url('themes.php?page=so_panels_home_page')
-				); ?>
-			<?php endif; ?>
-
-			<?php printf( __("<a href='%s'>Disable this page</a> if you'd prefer to have a standard blog home.", 'siteorigin'), $toggle_url ) ?>
-		</p>
-		<?php
-	}
 
 	// Add the panel layout wrapper
 	echo '<div id="pl-' . $post_id . '">';
