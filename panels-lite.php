@@ -25,7 +25,7 @@ function siteorigin_panels_lite_localization( $key = false ){
 			'off_text' => __( 'Off', 'siteorigin' ),
 
 			// Longer message to display to a user about installing the plugin
-			'home_install_message' => __( 'This theme supports Page Builder to create beautifully proportioned column based content.', 'siteorigin-north' ),
+			'home_install_message' => __( 'This theme supports Page Builder to create beautifully proportioned column based content.', 'siteorigin' ),
 			'home_disable_message' => '',   // Message about disabling the custom home page if the user doesn't want to use it
 		) );
 	}
