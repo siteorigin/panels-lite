@@ -173,6 +173,7 @@ function siteorigin_panels_lite_setting($key = false){
 function siteorigin_panels_lite_filter_home_template($template){
 	// The user has already selected their own page as the home template
 	if ( get_option( 'show_on_front' ) !== 'posts' ) return $template;
+	if ( defined( 'PANELS_LITE_NO_DEFAULT_HOME' ) ) return $template;
 
 	// Do we even support the home template
 	if ( !get_theme_mod('siteorigin_panels_home_page_enabled', siteorigin_panels_lite_setting('home-page-default') ) ) return $template;
