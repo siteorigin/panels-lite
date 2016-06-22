@@ -25,9 +25,7 @@ class SiteOrigin_Panels_Lite_Default_Styling {
 		if( !empty( $args['row_stretch'] ) ) {
 			$attributes['class'][] = 'siteorigin-panels-stretch';
 			$attributes['data-stretch-type'] = $args['row_stretch'];
-
-			$js_suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
-			wp_enqueue_script('siteorigin-panels-front-styles', get_template_directory_uri() . '/inc/panels-lite/js/styling' . $js_suffix . '.js', array('jquery'), SITEORIGIN_PANELS_LITE_VERSION );
+			wp_enqueue_script('siteorigin-panels-front-styles', get_template_directory_uri() . '/inc/panels-lite/js/styling' . SITEORIGIN_THEME_JS_PREFIX . '.js', array('jquery'), SITEORIGIN_PANELS_LITE_VERSION );
 		}
 
 		if( !empty( $args['class'] ) ) {
