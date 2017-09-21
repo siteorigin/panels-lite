@@ -22,7 +22,7 @@ class SiteOrigin_Panels_Lite_Css_Builder {
 	 * @param int $resolution The pixel resolution that this applies to
 	 */
 	function add_css($selector, $attributes, $resolution = 1920) {
-		$attribute_string = '';
+		$attribute_string = array();
 		foreach( $attributes as $k => $v ) {
 			$attribute_string[] = $k.':'.$v;
 		}
