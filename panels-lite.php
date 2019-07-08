@@ -190,7 +190,7 @@ add_filter('home_template', 'siteorigin_panels_lite_filter_home_template');
  * @return mixed|void Are we currently viewing the home page
  */
 function siteorigin_panels_lite_is_home(){
-	$home = ( is_home() && get_theme_mod('siteorigin_panels_home_page_enabled', siteorigin_panels_lite_setting('home-page-default') ) && !is_page() && siteorigin_panels_lite_setting( 'home-page-default' ) );
+	$home = ( is_home() && is_front_page() && get_theme_mod('siteorigin_panels_home_page_enabled', siteorigin_panels_lite_setting('home-page-default') ) && !is_page() && siteorigin_panels_lite_setting( 'home-page-default' ) );
 	return apply_filters('siteorigin_panels_is_home', $home);
 }
 
