@@ -138,22 +138,22 @@ function siteorigin_panels_lite_setting($key = false){
 	else $settings = array();
 
 	$settings = wp_parse_args( $settings, array(
-		'home-page' => false,                                                                                               // Is Appearance > Home Page supported?
-		'home-page-default' => false,                                                                                       // Should the home page be enabled by default?
-		'home-template' => 'home-panels.php',                                                                               // The page template used for the home page.
-		'home-demo-template' => false,                                                                                      // The home page layout to be used.
-		'post-types' => get_option('siteorigin_panels_post_types', array('page', 'post') ),                                 // Post types that can be edited.
+		'home-page' => false, // Is Appearance > Home Page supported?
+		'home-page-default' => false, // A string containg the name of the exported layout to be used.
+		'home-template' => 'home-panels.php', // The page template used for the home page.
+		'home-demo-template' => false, // A string containg the name of the file to be used.
+		'post-types' => get_option('siteorigin_panels_post_types', array('page', 'post') ), // Post types that can be edited.
 
-		'bundled-widgets' => !isset( $display_settings['bundled-widgets'] ) ? true : $display_settings['bundled-widgets'],  // Include bundled widgets.
-		'responsive' => !isset( $display_settings['responsive'] ) ? true : $display_settings['responsive'],                 // Should we use a responsive layout?
-		'mobile-width' => !isset( $display_settings['mobile-width'] ) ? 780 : $display_settings['mobile-width'],            // What is considered a mobile width?
+		'bundled-widgets' => !isset( $display_settings['bundled-widgets'] ) ? true : $display_settings['bundled-widgets'], // Include bundled widgets.
+		'responsive' => !isset( $display_settings['responsive'] ) ? true : $display_settings['responsive'], // Should we use a responsive layout?
+		'mobile-width' => !isset( $display_settings['mobile-width'] ) ? 780 : $display_settings['mobile-width'], // What is considered a mobile width?
 
-		'margin-bottom' => !isset( $display_settings['margin-bottom'] ) ? 30 : $display_settings['margin-bottom'],          // Row bottom margin.
-		'margin-sides' => !isset( $display_settings['margin-sides'] ) ? 30 : $display_settings['margin-sides'],             // Row gutter, the amount of space between cells.
-		'affiliate-id' => false,                                                                                            // SiteOrigin affiliate ID.
-		'copy-content' => !isset( $display_settings['copy-content'] ) ? true : $display_settings['copy-content'],           // Should we copy across content?
-		'animations' => !isset( $display_settings['animations'] ) ? true : $display_settings['animations'],                 // Do we need animations?
-		'inline-css' => !isset( $display_settings['inline-css'] ) ? true : $display_settings['inline-css'],                 // How to display CSS?
+		'margin-bottom' => !isset( $display_settings['margin-bottom'] ) ? 30 : $display_settings['margin-bottom'], // Row bottom margin.
+		'margin-sides' => !isset( $display_settings['margin-sides'] ) ? 30 : $display_settings['margin-sides'], // Row gutter, the amount of space between cells.
+		'affiliate-id' => false, // SiteOrigin affiliate ID.
+		'copy-content' => !isset( $display_settings['copy-content'] ) ? true : $display_settings['copy-content'], // Should we copy across content?
+		'animations' => !isset( $display_settings['animations'] ) ? true : $display_settings['animations'], // Do we need animations?
+		'inline-css' => !isset( $display_settings['inline-css'] ) ? true : $display_settings['inline-css'], // How to display CSS?
 	) );
 
 	// Filter these settings
