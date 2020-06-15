@@ -12,7 +12,7 @@ $toggle_url = wp_nonce_url(admin_url('admin-ajax.php?action=panels_lite_toggle&p
 		<a id="panels-toggle-switch" href="<?php echo esc_url($toggle_url) ?>" class="state-<?php echo $home ? 'on' : 'off' ?> subtle-move">
 			<div class="on-text"><?php echo esc_html( siteorigin_panels_lite_localization('on_text') ) ?></div>
 			<div class="off-text"><?php echo esc_html( siteorigin_panels_lite_localization('on_text') ) ?></div>
-			<img src="<?php echo get_template_directory_uri() ?>/inc/panels-lite/css/images/handle.png" class="handle" />
+			<img src="<?php echo esc_url( get_template_directory_uri() ) ?>/inc/panels-lite/css/images/handle.png" class="handle" />
 		</a>
 	</h2>
 
