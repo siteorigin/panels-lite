@@ -105,7 +105,7 @@ function siteorigin_panels_lite_enqueue_admin($prefix){
 			wp_enqueue_script( 'siteorigin-panels-lite-teaser', get_template_directory_uri() . '/inc/panels-lite/js/tab' . SITEORIGIN_THEME_JS_PREFIX . '.js', array( 'jquery' ), SITEORIGIN_PANELS_LITE_VERSION );
 			wp_localize_script( 'siteorigin-panels-lite-teaser', 'panelsLiteTeaser', array(
 				'tab'        => siteorigin_panels_lite_localization( 'page_builder' ),
-				'installUrl' => self_admin_url( 'plugin-install.php?tab=plugin-information&amp;plugin=siteorigin-panels&amp;TB_iframe=true&amp;width=600&amp;height=550' ),
+				'installUrl' => self_admin_url( 'plugin-install.php?tab=plugin-information&plugin=siteorigin-panels&width=600&height=550' ),
 			) );
 
 			wp_enqueue_style( 'siteorigin-panels-lite-teaser', get_template_directory_uri() . '/inc/panels-lite/css/post-teaser.css', array(), SITEORIGIN_PANELS_LITE_VERSION );
